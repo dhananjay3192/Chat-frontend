@@ -1,0 +1,15 @@
+<div class="crop" [style.color]="userColor?userColor:'white'" [style.background]="userBg?userBg:'blue'">
+  {{firstChar}}
+</div>
+<div class="about">
+  <div class="name">
+    {{userFirstName}} {{userLastName}}
+    <i class="fa fa-angle-right warning"></i>
+    <span>{{messageRead}}</span>
+
+  </div>
+  <div class="status">
+    <i class="fa fa-circle" [ngClass]="userStatus"></i>
+    {{userStatus}}
+  </div>
+</div>  

@@ -1,0 +1,174 @@
+<div class="container">
+  <div class="row">
+
+    <div class="displayBlockMobile" style="position:fixed;width:100%;z-index:1;">
+
+      <div class="col-sm-12 p-0">
+
+        <nav class="navbar navbar-expand-md navbar-fixed navbar-dark bg-dark">
+
+          <a class="navbar-brand text-white">
+            {{userInfo.firstName}} {{userInfo.lastName}}
+            <i class="online" *ngIf="disconnectedSocket == false"></i>
+            <i class="offline" *ngIf="disconnectedSocket == true"></i>
+          </a>
+          <button (click)="logout()" class="btn btn-info customPhoneButton">Logout</button>
+ 
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+
+            <span class="navbar-toggler-icon"></span>
+
+          </button>
+
+          <div class="collapse people-list navbar-collapse" id="navbarSupportedContent">
+
+            <ul class="list">
+              <li class="p-2 typeOfChats">
+                Online Users:
+              </li>
+              <li class="clearfix cursorPointer" [ngClass]="{'activeChat': user.chatting == true}" 
+                *ngFor="let user of userList" (click)="userSelectedToChat(user.userId,user.name)">
+                <div class="userPresence" *ngIf="user.userId != userInfo.userId">
+
+      <!--the user whose user id is not equal 
+                to your user id, only those user's name will be shown, userInfo has your own userId-->
+                  <!-- code to display individual users -->
+      
+                    <user-details [userFirstName]="user.name" [userLastName]="''" [userStatus]="'online'" [messageRead]="''"></user-details>
+                   <span><i class="fa fa-circle online ml-1" *ngIf="disconnectedSocket == false"></i></span>
+                    <span *ngIf="user.unread>0 && receiverId!=user.userId" class="unread"></span>
+                  <!-- code to display unread offline users -->
+                </div>
+              </li>
+              <li class="p-2 typeOfChats">
+                Unread Offline Users:
+              </li>
+              <li class="cursorPointer" *ngFor="let unseenUser of unseenUserList" (click)="userSelectedToChat(unseenUser.userId,unseenUser.name)">
+                <div *ngIf="unseenUser.status!='online' && unseenUser.read==false" class="userPresence">
+                  <user-details [userFirstName]="unseenUser.name" [userLastName]="''" [userStatus]="unseenUser.status" [messageRead]="''"></user-details>
+                  <span class="unread ml-1"></span>
+                </div>
+              </li>
+         
+            </ul>
+      
+
+          </div>
+
+        </nav>
+
+      </div>
+
+    </div>
+
+    <div class=" displayNoneMobile col-sm-4 col-md-4 people-list p-0" id="people-list">
+
+      <div class="p-3 text-white textCapitalize textCenter">
+        {{userInfo.firstName}} {{userInfo.lastName}}
+        <i class="fa fa-circle online" *ngIf="disconnectedSocket == false"></i>
+        <i class="fa fa-circle offline" *ngIf="disconnectedSocket == true"></i>
+        <br>
+        <br>
+        <button (click)="logout()" class="btn btn-info customButton">Logout</button>
+       
+      </div>
+
+      <ul class="list">
+        <li class="p-2 typeOfChats">
+          Online Users:
+        </li>
+        <li class="clearfix cursorPointer" [ngClass]="{'activeChat': user.chatting == true}" 
+          *ngFor="let user of userList" (click)="userSelectedToChat(user.userId,user.name)">
+          <div class="userPresence" *ngIf="user.userId != userInfo.userId">
+
+            <!-- code to display individual users -->
+
+              <user-details [userFirstName]="user.name" [userLastName]="''" [userStatus]="'online'" [messageRead]="''"></user-details>
+             <span><i class="fa fa-circle online ml-1" *ngIf="disconnectedSocket == false"></i></span>
+              <span *ngIf="user.unread>0 && receiverId!=user.userId" class="unread"></span>
+            <!-- code to display individual users -->
+          </div>
+        </li>
+        <li class="p-2 typeOfChats">
+          Unread Offline Users:
+        </li>
+        <li class="cursorPointer" *ngFor="let unseenUser of unseenUserList" (click)="userSelectedToChat(unseenUser.userId,unseenUser.name)">
+          <div *ngIf="unseenUser.status!='online' && unseenUser.read==false" class="userPresence">
+            <user-details [userFirstName]="unseenUser.name" [userLastName]="''" [userStatus]="unseenUser.status" [messageRead]="''" 
+            [userBg]="'black'" [userColor]="'white'"></user-details>           <span class="unread ml-1"></span>
+          </div>
+        </li>
+   
+      </ul>
+
+
+    </div>
+
+    <div class="col-12 col-sm-8 chat">
+      <div class="chat-header clearfix mobileMenu pt-5 pt-sm-1" *ngIf="receiverName && receiverId!==userInfo.userId">
+          <first-char [name]="receiverName" [userBg]="'blue'" [userColor]="'white'" (notify) ="showUserName($event)"></first-char>
+         <div class="chat-about">
+           <div class="chat-with">Chat with {{receiverName}}</div>
+         </div>
+      </div>
+
+      <div  #scrollMe [scrollTop]="(scrollToChatTop)?0:scrollMe.scrollHeight"class="chat-history" *ngIf="receiverName && receiverId!==userInfo.userId">
+
+        <ul>
+          <li class="textCenter" *ngIf="receiverName && receiverId!==userInfo.userId">
+            <span class="cursorPointer" (click)="loadEarlierPageOfChat()">
+              Load Previous Chat
+            </span>
+
+            <br>
+
+            <span *ngIf="loadingPreviousChat==true">
+              Loading....
+            </span>
+          </li>
+
+          <li class="clearfix" *ngFor="let message of messageList">
+            <div class="message-data" [ngClass]="{'align-right':message.senderId==userInfo.userId}">
+               <span class="message-data-time">
+                 {{message?.createdOn | date:'medium'}}
+               </span> &nbsp; &nbsp;
+               <span class="message-data-name floatLeft" *ngIf="message.senderId!=userInfo.userId">
+                 <i class="fa fa-circle online"></i>
+                 {{message?.senderName}}
+               </span>
+               <span class="message-data-name" *ngIf="message.senderId==userInfo.userId">
+                 {{message?.senderName}}
+               </span>
+               <i class="fa fa-circle me" *ngIf="message.senderId==userInfo.userId"></i>
+            </div>
+            <div class="message" [ngClass]="{'float-right other-message':message.senderId==userInfo.userId,'my-message':message.senderId!=userInfo.userId}">
+              {{message?.message | removeSpecialCharPipe: '#' | removeSpecialCharPipe: '$'}}
+            </div>
+
+          </li>
+        </ul>
+      </div>
+      <div *ngIf="userInfo.userId==receiverId" class="col-sm blankContent">
+        Click on a user to start a chat !!!
+      </div><!--end chat history-->
+      <div class="chat-message clearfix p-2" *ngIf="receiverName">
+        <textarea name="message-to-send" id="message-to-send" (keydown)="sendMessageUsingKeypress($event)" [(ngModel)]="messageText"
+          placeholder="Type your message" rows="3"></textarea>
+
+        <button (click)="sendMessage()">Send</button>
+
+      </div>
+      <!-- end chat-message -->
+    </div>
+
+    
+
+  </div>
+  <!-- end chat -->
+
+</div>
+<!-- end container -->
+
+
+
